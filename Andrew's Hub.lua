@@ -27,9 +27,22 @@ WelcomeTab:CreateButton({
 WelcomeTab:CreateButton({
     Name = "Leave Game",
     Callback = function()
-        game:GetService("Players").LocalPlayer:Kick("You have left the game.")
-        wait(0.1)
-        game:Shutdown()
+        local Players = game:GetService("Players")
+        local player = Players.LocalPlayer
+
+        local function autoLeave()
+            if player then
+                player:Kick("You have left the game.")
+                -- game:Shutdown() won't execute after Kick(), but in case the script is run in Studio or by error:
+                task.delay(1, function()
+                    pcall(function()
+                        game:Shutdown()
+                    end)
+                end)
+            end
+        end
+
+        autoLeave()
     end
 })
 
@@ -66,6 +79,20 @@ WelcomeTab:CreateToggle({
         end
     end
 })
+WelcomeTab:CreateLabel("Home")
+
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
+local destinationPlaceId = 111248419958538 -- Your Hub game ID
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Backquote then
+        TeleportService:Teleport(destinationPlaceId, Players.LocalPlayer)
+    end
+end)
 
 local TogglesTab = Window:CreateTab("Toggles")
 
@@ -117,8 +144,12 @@ TogglesTab:CreateToggle({
         _G.CustomSpeedEnabled = value
 
         local function applySpeed()
-            if Player.Character and Player.Character:FindFirstChild("Humanoid") and _G.CustomSpeedEnabled then
-                Player.Character.Humanoid.WalkSpeed = _G.CustomSpeedValue or 16
+            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                if _G.CustomSpeedEnabled then
+                    Player.Character.Humanoid.WalkSpeed = _G.CustomSpeedValue or 16
+                else
+                    Player.Character.Humanoid.WalkSpeed = 16
+                end
             end
         end
 
@@ -148,8 +179,12 @@ TogglesTab:CreateToggle({
         _G.CustomJumpPowerEnabled = value
 
         local function applyJumpPower()
-            if Player.Character and Player.Character:FindFirstChild("Humanoid") and _G.CustomJumpPowerEnabled then
-                Player.Character.Humanoid.JumpPower = _G.CustomJumpPowerValue or 50
+            if Player.Character and Player.Character:FindFirstChild("Humanoid") then
+                if _G.CustomJumpPowerEnabled then
+                    Player.Character.Humanoid.JumpPower = _G.CustomJumpPowerValue or 50
+                else
+                    Player.Character.Humanoid.JumpPower = 16
+                end
             end
         end
 
